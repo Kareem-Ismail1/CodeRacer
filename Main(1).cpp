@@ -1,7 +1,7 @@
-#include <iostream>
-#include <string>
-#include <cmath>
-using namespace std;
+
+// #include "prompt.h"
+
+
 /*
 Kareem Ismail
 
@@ -12,43 +12,18 @@ Code Racer 1.5
 Program Description: 
 The ultimate way to both practice technical interview questions(LeetCode type questions) and 
 have fun. The purpose of this is exactly that, provide more experience with LeetCode type 
-questions in a 1v1, 2v2, or 4v4 format. The team that completes the question within the 
-time limit first wins, if no one solves it, the winner is the one who got more test cases 
-passed. This solves the problem of wanting to practice but not having any incentive, 
+questions in a 1v1 format. The player that completes the question within the 
+time limit first wins. This solves the problem of wanting to practice but not having any incentive, 
 since it is fun, it will drive you to play, also the rank system also has incentive
 since people generally want to be ranked high. Compete against friends, or aim to 
 be the best while learning!
 
-Version 1.5 includes 5 milestones
-
-Milestone 1 — Core Practice
-prompt system
-timer
-submission
-basic grading
-Milestone 2 — Local Versus 🔥
-same prompt
-shared timer
-separate submissions
-winner logic
-race result screen
-Milestone 3 — Unix aesthetic
-monospace font
-terminal colors
-split panes
-keyboard-first UI
-Milestone 4 — Online multiplayer
-rooms
-websocket sync
-matchmaking
-Milestone 5 — Ranked
-Elo/MMR
-stats
-leaderboards
 */
 
-
 #include <iostream>
+#include <cmath>
+#include <random>
+#include <limits>
 #include <string>
 #include <vector>
 #include <thread>
@@ -56,11 +31,83 @@ leaderboards
 
 using namespace std;
 
+class RoundResult {
+public:
+    string code;
+    int timeTaken;
+    bool timedOut;
+};
+
 
 // ------------------------------
 // GLOBAL STATE (temporary MVP storage)
 // ------------------------------
 vector<string> usernames;
+
+RoundResult codingRound(string prompt){
+
+    RoundResult result;
+    result.timedOut = false; 
+
+    cout << prompt << "\n\n";
+
+    string line;
+    string userCode = "";
+
+    cout << "Type your code below (END to submit):\n";
+
+    auto start = chrono::steady_clock::now();
+
+    while (true) {
+
+        auto now = chrono::steady_clock::now();
+
+        auto elapsed =
+            chrono::duration_cast<chrono::seconds>(now - start);
+
+        if(elapsed.count() >= 120){
+            cout << "Time is up!\n";
+            result.timedOut = true;
+            break;
+        }
+
+        getline(cin, line);
+
+        if(line == "END")
+            break;
+
+        userCode += line + "\n";
+    }
+
+    auto finish = chrono::steady_clock::now();
+
+    result.timeTaken =
+        chrono::duration_cast<chrono::seconds>(
+            finish - start
+        ).count();
+
+    result.code = userCode;
+
+    return result;
+}
+    random_device rd;
+    mt19937 gen(rd());
+int getRandom(int size){
+
+    
+
+    uniform_int_distribution<> dist(0, size - 1);
+
+    return dist(gen);
+}
+
+class Prompt{ // might need to rework the data types
+    // vector<string> testCases;
+    public:
+    string description; 
+    // string solution; 
+};
+
 
 // ------------------------------
 // Local Versus Mode
@@ -72,35 +119,63 @@ a fake IDE for player 1 first, then player 2.
 Then when both finish, the judge should see all code, and be given judging outlines. 
 */
 // ------------------------------
-void LocalOneVOne(string username1, string username2){
-    cout << "Give " << username1 << " the device. "<< endl << "Prompt will be shown in 15 seconds" << endl;
+
+void clearScreen() {
+    system("clear");
+    cout.flush();
+}
+
+
+void LocalOneVOne(string username1, string username2, string prompt){
+    string winner;
+    cout << "Give " << username1 << " the device. " << endl << "Prompt will be shown in 15 seconds." << endl;
     for (int i = 1; i <= 15; i++) {
         // cout << "Time elapsed: " << i << " seconds" << endl;
         this_thread::sleep_for(chrono::seconds(1));
     }
-    for(int i = 0; i < 2; i++){
-        string prompt = "Problem: Write a function that returns sum of two numbers."; // or instead pull from a global vector of prompt objects
+        cout << "Two minutes starts now!" << endl; 
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        RoundResult player1 = codingRound(prompt);
 
-        cout << prompt << "\n\n";
+        string userCode1 = player1.code;
 
-        cout << "Type your code below (type END to finish):\n";
-
-        string line;
-        string userCode1 = "";
-
-        cin.ignore(); // clear input buffer
-
-        while (true) {
-            getline(cin, line);
-
-            if (line == "END") break;
-
-            userCode1 += line + "\n";
+        clearScreen(); 
+        cout << "Give " << username2 << " the device. " << endl << "Prompt will be shown in 15 seconds." << endl;
+      
+         for (int i = 1; i <= 15; i++) {
+        // cout << "Time elapsed: " << i << " seconds" << endl;
+        this_thread::sleep_for(chrono::seconds(1));
         }
-    }
-   
-    
-    return; 
+        cout << "Two minutes starts now!" << endl;
+
+        RoundResult player2 = codingRound(prompt);
+
+        string userCode2 = player2.code;
+
+        clearScreen(); 
+        cout << "Please give the device to the Judge" << endl << endl;
+
+        cout << "Judge: You will recieve the code in 10 seconds, please find the winner according to these guidelines" << endl; 
+
+        cout << "Please judge by whoever completed the assignment so an incomplete one is a loss, then judge by whoever completed it the fastest" << endl;
+
+        cout << username1 << "'s Code: " << endl << endl;
+
+        cout << userCode1 << endl << endl; 
+
+        cout << username1 << " wrote this in " << player1.timeTaken << " seconds." << endl << endl;
+
+        cout << username2 << "'s Code: " << endl << endl;
+
+        cout << userCode2 << endl << endl; 
+
+        cout << username2 << " wrote this in " << player2.timeTaken << " seconds." << endl << endl;
+
+        cout << "Please choose the winner" << endl; 
+
+        getline(cin, winner);
+
+        cout << "The winner is " << winner << "!" << endl; 
 }
 
 // ------------------------------
@@ -123,56 +198,41 @@ void testTimer() {
 // USERNAME INPUT FUNCTION
 // Simple version using vector storage
 // ------------------------------
-string GetUsername() {
-    string username;
+vector<string> GetUsernames() {
 
-    cout << "Enter username: ";
-    cin >> username;
+    vector<string> players(2);
 
-    // check if username exists
-    for (const string &u : usernames) {
-        if (u == username) {
-            cout << "Welcome back, " << username << "!\n";
-            return username;
-        }
+    cout << "Player 1 enter your username: ";
+   
+    getline(cin, players[0]);
+    while(players[0].empty()){
+        cout << "Username cannot be empty: ";
+        getline(cin, players[0]);
     }
 
-    // if new user
-    cout << "New user created: " << username << "\n";
+    cout << "Player 2 enter your enter username: ";
+    getline(cin,players[1]);
+    while(players[1].empty()){
+        cout << "Username cannot be empty: ";
+        getline(cin, players[0]);
+    }
 
-    usernames.push_back(username);
-   
-    return username;
+
+    return players;
 }
 
 // ------------------------------
 // PRACTICE MODE
 // Placeholder coding environment
 // ------------------------------
-void StartPractice() {
+void StartPractice(string prompt) {
     cout << "\n================ PRACTICE MODE ================\n";
 
-    string prompt = "Problem: Write a function that returns sum of two numbers.";
+    RoundResult prac = codingRound(prompt);
 
-    cout << prompt << "\n\n";
+    cout << prac.code << endl;
 
-    cout << "Type your code below (type END to finish):\n";
-
-    string line;
-    string userCode = "";
-
-    cin.ignore(); // clear input buffer
-
-    while (true) {
-        getline(cin, line);
-
-        if (line == "END") break;
-
-        userCode += line + "\n";
-    }
-
-    cout << "\n--- Your Submitted Code ---\n";
-    cout << userCode;
+    cout << "Done in " << prac.timeTaken << " seconds!" << endl; 
 
     cout << "\n(Submission stored — evaluation system coming later)\n";
 }
@@ -191,17 +251,61 @@ void RankedNotReadyScreen() {
 // MAIN MENU (TITLE SCREEN)
 // ------------------------------
 int main() {
-    string username = GetUsername();
+    vector<string> usernames(2);
+    
+    usernames = GetUsernames();
 
     char choice;
+
+    vector<Prompt> prompts;
+  
+    Prompt p1;
+    p1.description = "Write a function that returns sum of two numbers";
+
+    Prompt p2;
+    p2.description = "Write a function that finds max of two numbers";
+
+    Prompt p3;
+    p3.description = "Write a function that checks if number is even";
+
+    Prompt p4;
+    p4.description = "Write a function that returns the largest of 3 numbers";
+
+    Prompt p5;
+    p5.description = "Write a function that finds the minimum in a vector";
+
+    Prompt p6;
+    p6.description = "Write a function checks if a numnber is odd";
+
+    Prompt p7;
+    p7.description = "Write a function that counts vowels in a string";
+
+    Prompt p8;
+    p8.description = "Write a function that finds sum of elements in vector";
+
+    Prompt p9;
+    p9.description = "Write a function that gets a username from input";
+
+    Prompt p10;
+    p10.description = "Write a function checks if number is positive/negative";
+
+    prompts.push_back(p1);
+    prompts.push_back(p2);
+    prompts.push_back(p3);
+    prompts.push_back(p4);
+    prompts.push_back(p5);
+    prompts.push_back(p6);
+    prompts.push_back(p7);
+    prompts.push_back(p8);
+    prompts.push_back(p9);
+    prompts.push_back(p10);
+
 
     while (true) {
         cout << "\n=========== CODERACER MENU ===========\n";
         cout << "p - Practice Mode\n";
         cout << "r - Ranked Mode (Coming Soon)\n";
         cout << "t - Test Timer\n";
-        // cout << "e - Expanding on solutions\n";
-        // cout << "i - Expanding on idea and vision for coderacer\n";
         cout << "l - Local 1v1 Mode\n";
         cout << "q - Quit\n";
         cout << "======================================\n";
@@ -210,7 +314,12 @@ int main() {
 
         switch (choice) {
             case 'p':
-                StartPractice();
+                if(prompts.empty()){
+                    cout << "No prompts available.\n";
+                    return 0; 
+                }
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                StartPractice(prompts.at(getRandom(prompts.size())).description);
                 break;
 
             case 'r':
@@ -222,21 +331,15 @@ int main() {
                 break;
 
             case 'q':
-                cout << "Exiting program. Goodbye " << username << "!\n";
+                cout << "Exiting program. Goodbye " << usernames[0] << " and " << usernames[1] << "!" << endl; 
                 return 0;
             case 'l':
-                LocalOneVOne("Timothy Jr", "Dr. Strange");
-                // cout << "Call function named LocalOneVOne" << endl;
+                if(prompts.empty()){
+                    cout << "No prompts available.\n";
+                    return 0; 
+                }
+                LocalOneVOne(usernames[0], usernames[1],prompts.at(getRandom(prompts.size())).description);
                 break;
-
-            // case 'e':
-            //     cout << "Make a class of problems/solutions, and a vector of those objects" << endl;
-            //     break;
-
-            // case 'i':
-            //     cout << "I don't want it to be like Codeforces, but I want it to be educational and competitive in nature" << endl;
-            //     break;
-
             default:
                 cout << "Invalid input. Try again.\n";
         }
